@@ -126,8 +126,17 @@ static func _plan_remove_action(db: ContentDB, state: GameState, player_id: Stri
     p.timeline.remove_at(idx)
     return _result(state, [{"type": "action_removed", "player": player_id, "action_id": id}])
 
-# TEMPORARY STUB (Task 6 provides the real implementation): jouer une carte
-# n'est pas encore implémenté. Ce stub permet à apply_intent de compiler et
-# de rejeter proprement PLAY_CARD tant que la Task 6 n'est pas faite.
 static func _play_card(db: ContentDB, state: GameState, player_id: String, intent: Dictionary) -> Dictionary:
-    return _reject(state, "cartes non implémentées")
+    var p: PlayerState = state.players[player_id]
+    var card_id: String = intent["card_id"]
+    if not p.hand.has(card_id):
+        return _reject(state, "carte absente de la main: " + card_id)
+    if not db.cards.has(card_id):
+        return _reject(state, "carte inconnue: " + card_id)
+    var card: CardRes = db.cards[card_id]
+    var playable := CardResolver.is_playable(state, player_id, card)
+    if not playable.ok:
+        return _reject(state, playable.error)
+    p.hand.erase(card_id)
+    var tid := CardResolver.play(db, state, player_id, card)
+    return _result(state, [{"type": "card_played", "player": player_id, "card_id": card_id, "target": tid}])
