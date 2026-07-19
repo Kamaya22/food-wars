@@ -140,3 +140,52 @@ static func _play_card(db: ContentDB, state: GameState, player_id: String, inten
     p.hand.erase(card_id)
     var tid := CardResolver.play(db, state, player_id, card)
     return _result(state, [{"type": "card_played", "player": player_id, "card_id": card_id, "target": tid}])
+
+static func tick(db: ContentDB, state: GameState, delta: float) -> Dictionary:
+    if state.phase == GameState.Phase.FINISHED:
+        return _result(state, [])
+    var events: Array = []
+    if state.phase == GameState.Phase.EXECUTION:
+        events.append_array(Timeline.advance_all(db, state, delta))
+        events.append_array(EventScheduler.tick(db, state, delta))
+    elif state.phase == GameState.Phase.PLANNING:
+        events.append_array(EventScheduler.tick(db, state, delta))
+    events.append_array(PhaseMachine.advance_timers(db, state, delta))
+    return _result(state, events)
+
+static func _self_view(db: ContentDB, p: PlayerState) -> Dictionary:
+    return {
+        "budget_left": p.budget_left,
+        "ingredients": p.ingredients.duplicate(),
+        "timeline": p.timeline.duplicate(),
+        "hand": p.hand.duplicate(),
+        "deck_count": p.deck.size(),
+        "ready": p.ready,
+        "exec_index": p.exec_index,
+        "exec_elapsed": p.exec_elapsed,
+        "dish": Dish.compute(db, p),
+    }
+
+static func _public_view(db: ContentDB, p: PlayerState) -> Dictionary:
+    return {
+        "ingredients": p.ingredients.duplicate(),
+        "timeline": p.timeline.duplicate(),
+        "ready": p.ready,
+        "exec_index": p.exec_index,
+        "dish": Dish.compute(db, p),
+        "hand_count": p.hand.size(),
+        "deck_count": p.deck.size(),
+    }
+
+static func get_view(db: ContentDB, state: GameState, viewer_id: String) -> Dictionary:
+    var opponents: Dictionary = {}
+    for id in state.player_order:
+        if id != viewer_id:
+            opponents[id] = _public_view(db, state.players[id])
+    return {
+        "phase": state.phase,
+        "phase_time_left": state.phase_time_left,
+        "result": state.result.duplicate(),
+        "you": _self_view(db, state.players[viewer_id]),
+        "opponents": opponents,
+    }
