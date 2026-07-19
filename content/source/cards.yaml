@@ -1,0 +1,11 @@
+- id: card_boost_umami
+  name: Umami+
+  type: global
+  target: self
+  effect: {stats: {umami: 2}}
+- id: card_saboter
+  name: Sabotage
+  type: contextual
+  target: opponent
+  linked_action: cuire
+  effect: {stats: {acide: 2}}

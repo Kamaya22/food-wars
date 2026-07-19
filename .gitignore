@@ -24,3 +24,6 @@ relay/node_modules/
 Thumbs.db
 .idea/
 .vscode/
+
+# Outils dev non versionnés (installés localement, voir task-1-brief.md)
+addons/gut/
