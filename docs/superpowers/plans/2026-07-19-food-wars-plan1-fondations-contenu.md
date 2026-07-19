@@ -1035,7 +1035,9 @@ Expected : `content/compiled/content.json` créé ; toutes les suites passent.
 - [ ] **Step 8 : Commit**
 
 ```bash
-git add content/content_loader.gd content/source scripts/build_content.py content/compiled/content.json tests/test_content_json.gd
+# NB: content/compiled/content.json est un artefact généré et GITIGNORÉ — ne pas le versionner.
+# On le génère (Step 7) et on vérifie qu'il charge, mais on ne le commit pas.
+git add content/content_loader.gd content/source scripts/build_content.py tests/test_content_json.gd
 git commit -m "feat(content): chargement JSON + sources YAML + convertisseur build_content.py"
 ```
 
