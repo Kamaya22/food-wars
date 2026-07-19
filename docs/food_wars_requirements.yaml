@@ -1,0 +1,100 @@
+# ==========================================================================
+# FOOD WARS - Game Requirements / Design Document
+# Squelette évolutif - à compléter et ajuster au fil du développement
+# ==========================================================================
+
+game_meta:
+  title: "Food Wars"
+  target_session_length_min: 10
+  platforms: [web, android, ios]
+  tone: "compétitif, rythmé, ambiance cuisine chaotique mais lisible"
+  visual_style:
+    art_direction: ""            # ex: cartoon coloré / stylisé / réaliste
+    ui_layout: "deux plans de travail face à face, cartes en bas d'écran"
+    references: []               # jeux ou images d'inspiration
+    color_palette: []            # à définir
+  modes:
+    - id: "food_wars"
+      description: "Mode compétitif 1v1"
+    - id: "exploration"
+      description: "Découverte de recettes/ingrédients d'un pays avec un chef"
+
+# --------------------------------------------------------------------------
+# REGLES DE JEU - Food Wars
+# --------------------------------------------------------------------------
+game_rules:
+  ingredient_budget: null          # points totaux disponibles par joueur - à définir
+  ingredients_per_player:
+    min: 3
+    max: 6
+  timeline_actions:
+    min: 5
+    max: 6
+  random_events:
+    frequency_window_min: 4        # 1 événement par tranche de 4 min
+  cards:
+    deck_size:
+      min: 15
+      max: 20
+    starting_hand_size: null       # à définir
+    draw_trigger: "action_transition"  # pioche sur changement d'activité (vs "fixed_interval")
+    ratio_contextual_vs_global: "majorité contextuelle"  # à chiffrer précisément
+  phases:
+    planning_min: null             # ex: 2-3 min - à affiner
+    execution_min: null            # ex: 5-6 min - à affiner
+    judgment_min: null             # ex: ~1 min - à affiner
+
+# --------------------------------------------------------------------------
+# ENTITES - données réutilisables par le moteur de jeu
+# --------------------------------------------------------------------------
+entities:
+
+  ingredients:
+    # - id: "tomate"
+    #   name: "Tomate"
+    #   cost: 2
+    #   stats: {umami: 3, sucre: 2, acide: 4, gras: 0, amer: 0, texture: 2}
+    #   tags: ["legume", "frais"]
+    []
+
+  actions:
+    # - id: "cuire"
+    #   name: "Cuire"
+    #   base_duration_sec: 45
+    #   effect: "modifie stats selon ingredients presents (ex: +umami, -acide)"
+    []
+
+  cards:
+    # - id: "card_001"
+    #   name: ""
+    #   type: "global"            # "global" | "contextual"
+    #   target: "self"            # "self" | "opponent"
+    #   linked_action: null       # id d'action si type == "contextual"
+    #   effect: ""
+    []
+
+  events:
+    # - id: "event_001"
+    #   name: "Coupure de courant"
+    #   trigger_window: "execution_phase"
+    #   effect: "four s'arrete 5s"
+    []
+
+  judgment_criteria:
+    # - id: "umami"
+    #   weight: 1.0
+    # - id: "originalite"
+    #   weight: 1.0
+    #   note: "calculé selon rareté de la combinaison de tags vs historique"
+    []
+
+# --------------------------------------------------------------------------
+# NOTES OUVERTES - points encore à trancher
+# --------------------------------------------------------------------------
+open_questions:
+  - "Taille exacte de la main de départ"
+  - "Ratio précis cartes contextuelles / globales"
+  - "Formule exacte du bonus originalité"
+  - "Diminishing returns sur stacking de stats"
+  - "Durée précise de chaque sous-phase (planning/execution/judgment)"
+  - "Contenu et structure du mode Exploration"

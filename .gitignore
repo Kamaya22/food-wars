@@ -1,0 +1,26 @@
+# Godot 4
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Godot exports / builds
+build/
+*.tmp
+
+# Mono / C# (au cas où)
+.mono/
+data_*/
+mono_crash.*.json
+
+# Contenu compilé généré à l'import (regénéré depuis content/source/*.yaml)
+content/compiled/
+
+# Relais Node (si serveur JS)
+relay/node_modules/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
