@@ -43,6 +43,20 @@ func test_deck_min_greater_than_cards_rejected():
     assert_false(res.ok)
     assert_true(_has_error(res, "deck_size"))
 
+func test_non_dict_list_entry_rejected_without_crash():
+    var raw := ValidContent.make()
+    raw["ingredients"].append("pas_un_dict")
+    var res := ContentLoader.load_from_dict(raw)
+    assert_false(res.ok)
+    assert_true(_has_error(res, "ingredient"), "l'erreur doit mentionner la categorie 'ingredient'")
+
+func test_non_dict_match_config_rejected_without_crash():
+    var raw := ValidContent.make()
+    raw["match_config"] = "pas_un_objet"
+    var res := ContentLoader.load_from_dict(raw)
+    assert_false(res.ok)
+    assert_true(_has_error(res, "match_config"), "l'erreur doit mentionner 'match_config'")
+
 func _has_error(res, needle: String) -> bool:
     for e in res.errors:
         if String(e).findn(needle) != -1:

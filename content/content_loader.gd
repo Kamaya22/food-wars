@@ -40,7 +40,10 @@ static func load_from_dict(raw: Dictionary) -> LoadResult:
         func(d): return CriterionRes.from_dict(d), "criterion", errors)
 
     if raw.has("match_config"):
-        db.match_config = MatchConfigRes.from_dict(raw["match_config"])
+        if typeof(raw["match_config"]) != TYPE_DICTIONARY:
+            errors.append("match_config invalide : doit etre un objet")
+        else:
+            db.match_config = MatchConfigRes.from_dict(raw["match_config"])
     else:
         errors.append("match_config manquant")
 
@@ -53,6 +56,9 @@ static func load_from_dict(raw: Dictionary) -> LoadResult:
 
 static func _load_list(items: Array, out: Dictionary, factory: Callable, kind: String, errors: PackedStringArray) -> void:
     for d in items:
+        if typeof(d) != TYPE_DICTIONARY:
+            errors.append("%s : entree invalide (attendu un objet, recu %s)" % [kind, str(d)])
+            continue
         var id := String(d.get("id", ""))
         if id == "":
             errors.append("%s sans id" % kind)
