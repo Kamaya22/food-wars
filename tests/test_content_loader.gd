@@ -57,6 +57,13 @@ func test_non_dict_match_config_rejected_without_crash():
     assert_false(res.ok)
     assert_true(_has_error(res, "match_config"), "l'erreur doit mentionner 'match_config'")
 
+func test_non_positive_event_window_rejected():
+    var raw := ValidContent.make()
+    raw["match_config"]["event_frequency_window_sec"] = 0
+    var res := ContentLoader.load_from_dict(raw)
+    assert_false(res.ok)
+    assert_true(_has_error(res, "event_frequency_window_sec"))
+
 func _has_error(res, needle: String) -> bool:
     for e in res.errors:
         if String(e).findn(needle) != -1:

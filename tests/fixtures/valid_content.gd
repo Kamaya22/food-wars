@@ -20,7 +20,7 @@ static func make() -> Dictionary:
             {"id": "card_saboter", "name": "Sabotage", "type": "contextual", "target": "opponent", "linked_action": "cuire", "effect": {"stats": {"acide": 2}}},
         ],
         "events": [
-            {"id": "coupure", "name": "Coupure de courant", "trigger_window": "execution", "effect": {"rule": "stop_oven_seconds", "value": 5}},
+            {"id": "coupure", "name": "Coupure de courant", "trigger_window": "execution", "effect": {"rule": "delay_execution_seconds", "value": 5}},
         ],
         "criteria": [
             {"id": "umami", "weight": 1.5},

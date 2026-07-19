@@ -93,3 +93,5 @@ static func _validate(db: ContentDB, errors: PackedStringArray) -> void:
     if db.match_config != null:
         if db.match_config.deck_size_min > db.cards.size():
             errors.append("match_config : deck_size.min (%d) > cartes definies (%d)" % [db.match_config.deck_size_min, db.cards.size()])
+        if db.match_config.event_frequency_window_sec <= 0:
+            errors.append("match_config : event_frequency_window_sec doit etre positif (%d)" % db.match_config.event_frequency_window_sec)
