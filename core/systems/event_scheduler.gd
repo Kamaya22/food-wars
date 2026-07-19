@@ -23,13 +23,14 @@ static func tick(db: ContentDB, state: GameState, delta: float) -> Array:
     var rng := Rng.new(0)
     rng.set_state(state.rng_state)
     state.event_timer_left -= delta
-    while state.event_timer_left <= 0.0:
+    var w := float(state.config["event_window_sec"])
+    while w > 0.0 and state.event_timer_left <= 0.0:
         if not candidates.is_empty():
             var pick: String = candidates[rng.randi_range(0, candidates.size() - 1)]
             var ev: EventRes = db.events[pick]
             for pid in state.player_order:
                 EffectResolver.apply(state.players[pid], ev.effect)
             events.append({"type": "event_fired", "event_id": pick, "description": ev.display_name})
-        state.event_timer_left += float(state.config["event_window_sec"])
+        state.event_timer_left += w
     state.rng_state = rng.get_state()
     return events

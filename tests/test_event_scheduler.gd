@@ -46,3 +46,12 @@ func test_no_events_for_phase_still_rearms():
     var events := EventScheduler.tick(_db, s, 1.0)
     assert_eq(events.filter(func(e): return e.type == "event_fired").size(), 0)
     assert_true(s.event_timer_left > 0.0)
+
+func test_non_positive_window_does_not_hang():
+    var s := _exec_state()
+    s.config["event_window_sec"] = 0
+    s.event_timer_left = -5.0  # déjà en retard
+    var events := EventScheduler.tick(_db, s, 1.0)
+    # Le fait d'atteindre cette ligne prouve l'absence de boucle infinie.
+    assert_eq(events.filter(func(e): return e.type == "event_fired").size(), 0)
+    assert_true(s.event_timer_left <= -5.0, "le minuteur ne doit pas se réarmer avec une fenêtre <= 0")
