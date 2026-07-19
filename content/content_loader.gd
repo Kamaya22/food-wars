@@ -6,6 +6,23 @@ class LoadResult:
     var db: ContentDB = null
     var errors: PackedStringArray = PackedStringArray()
 
+static func load_from_json_file(path: String) -> LoadResult:
+    if not FileAccess.file_exists(path):
+        var r := LoadResult.new()
+        r.db = ContentDB.new()
+        r.errors.append("fichier introuvable : %s" % path)
+        return r
+    var text := FileAccess.get_file_as_string(path)
+    var json := JSON.new()
+    var parse_err := json.parse(text)
+    var parsed = json.get_data() if parse_err == OK else null
+    if parse_err != OK or typeof(parsed) != TYPE_DICTIONARY:
+        var r := LoadResult.new()
+        r.db = ContentDB.new()
+        r.errors.append("JSON invalide dans : %s" % path)
+        return r
+    return load_from_dict(parsed)
+
 static func load_from_dict(raw: Dictionary) -> LoadResult:
     var result := LoadResult.new()
     var db := ContentDB.new()

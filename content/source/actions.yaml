@@ -1,0 +1,12 @@
+- id: cuire
+  name: Cuire
+  base_duration_sec: 45
+  effect: {stats: {umami: 2, acide: -1}}
+- id: mixer
+  name: Mixer
+  base_duration_sec: 20
+  effect: {stats: {texture: 3}}
+- id: assaisonner
+  name: Assaisonner
+  base_duration_sec: 15
+  effect: {stats: {umami: 1, sucre: 1}}

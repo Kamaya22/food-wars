@@ -1,0 +1,4 @@
+- id: coupure
+  name: Coupure de courant
+  trigger_window: execution
+  effect: {rule: stop_oven_seconds, value: 5}

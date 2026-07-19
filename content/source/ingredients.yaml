@@ -1,0 +1,20 @@
+- id: tomate
+  name: Tomate
+  cost: 2
+  stats: {umami: 3, acide: 4}
+  tags: [legume, frais]
+- id: boeuf
+  name: Bœuf
+  cost: 3
+  stats: {umami: 5, gras: 3}
+  tags: [viande]
+- id: sucre
+  name: Sucre
+  cost: 1
+  stats: {sucre: 6}
+  tags: [base]
+- id: citron
+  name: Citron
+  cost: 1
+  stats: {acide: 5}
+  tags: [fruit]
