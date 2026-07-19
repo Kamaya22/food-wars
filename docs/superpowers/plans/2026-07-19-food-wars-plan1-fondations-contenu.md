@@ -74,7 +74,7 @@ config_version=5
 
 [application]
 config/name="Food Wars"
-config/features=PackedStringArray("4.3")
+config/features=PackedStringArray("4.5")
 run/main_scene=""
 
 [editor_plugins]
