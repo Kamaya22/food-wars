@@ -5,6 +5,7 @@ enum Role { HOST, GUEST }
 
 signal session_paused(peer_id: String)
 signal session_aborted(reason: String)
+signal session_resumed(peer_id: String)
 
 var role: int = Role.HOST
 var local_id: String = ""
@@ -36,6 +37,8 @@ static func create_host(db: ContentDB, state: GameState, transport: ITransport, 
         s._last_seq[pid] = 0
     transport.message_received.connect(s._on_host_message)
     transport.peer_disconnected.connect(s._on_peer_disconnected)
+    transport.peer_suspended.connect(s._on_peer_suspended)
+    transport.peer_resumed.connect(s._on_peer_resumed)
     return s
 
 static func create_guest(db: ContentDB, transport: ITransport, guest_id: String, host_id: String) -> NetSession:
@@ -48,10 +51,15 @@ static func create_guest(db: ContentDB, transport: ITransport, guest_id: String,
     s.reconciler = Reconciler.new()
     transport.message_received.connect(s._on_guest_message)
     transport.peer_disconnected.connect(s._on_peer_disconnected)
+    transport.peer_suspended.connect(s._on_peer_suspended)
+    transport.peer_resumed.connect(s._on_peer_resumed)
     return s
 
 func transport() -> ITransport:
     return _transport
+
+func poll(delta: float) -> void:
+    _transport.poll(delta)
 
 # --- API HÔTE ---
 func host_apply_local(intent: Dictionary) -> void:
@@ -70,6 +78,10 @@ func host_view_for(viewer_id: String) -> Dictionary:
 
 func host_state() -> GameState:
     return _state
+
+func host_resync() -> void:
+    # Rediffuse les vues filtrées courantes (tick_id avance → le Reconciler accepte).
+    _broadcast([])
 
 func _on_host_message(from_peer: String, msg: Dictionary) -> void:
     if Protocol.kind_of(msg) != Protocol.KIND_INTENT:
@@ -103,7 +115,16 @@ func _on_guest_message(_from_peer: String, msg: Dictionary) -> void:
 
 # --- pannes ---
 func _on_peer_disconnected(peer_id: String) -> void:
+    # TERMINAL : la pause transitoire est portée par peer_suspended.
     if role == Role.GUEST and peer_id == _host_id:
         session_aborted.emit("host_disconnected")
     elif role == Role.HOST:
-        session_paused.emit(peer_id)
+        session_aborted.emit("peer_lost")
+
+func _on_peer_suspended(peer_id: String) -> void:
+    session_paused.emit(peer_id)
+
+func _on_peer_resumed(peer_id: String) -> void:
+    if role == Role.HOST:
+        host_resync()
+    session_resumed.emit(peer_id)

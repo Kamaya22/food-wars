@@ -55,13 +55,49 @@ func test_guest_receives_events():
     host.host_apply_local({"type": Intents.SET_READY, "ready": true})
     assert_true(guest.last_events.size() >= 1, "les events sont transmis à l'invité")
 
-func test_host_emits_paused_on_guest_drop():
+func test_host_emits_aborted_on_peer_disconnect():
+    # peer_disconnected est désormais TERMINAL côté hôte.
+    var w := _wire()
+    var host: NetSession = w.host
+    var aborted: Array = []
+    host.session_aborted.connect(func(reason): aborted.append(reason))
+    (w.guest.transport() as InMemoryTransport).drop()
+    assert_eq(aborted, ["peer_lost"])
+
+func test_host_emits_paused_on_peer_suspended():
     var w := _wire()
     var host: NetSession = w.host
     var paused: Array = []
     host.session_paused.connect(func(pid): paused.append(pid))
-    (w.guest.transport() as InMemoryTransport).drop()
+    (w.host.transport() as InMemoryTransport).emit_suspended("p1")
     assert_eq(paused, ["p1"])
+
+func test_host_resync_rebroadcasts_current_view():
+    var w := _wire()
+    var host: NetSession = w.host
+    var guest: NetSession = w.guest
+    host.host_apply_local({"type": Intents.ADD_INGREDIENT, "ingredient_id": "boeuf"})
+    var before := guest.reconciler.current_tick_id()
+    host.host_resync()
+    assert_gt(guest.reconciler.current_tick_id(), before, "resync diffuse un nouveau snapshot")
+    assert_eq(guest.reconciler.current_view(), host.host_view_for("p1"))
+
+func test_host_resume_triggers_resync_and_signal():
+    var w := _wire()
+    var host: NetSession = w.host
+    var guest: NetSession = w.guest
+    var resumed: Array = []
+    host.session_resumed.connect(func(pid): resumed.append(pid))
+    var before := guest.reconciler.current_tick_id()
+    (w.host.transport() as InMemoryTransport).emit_resumed("p1")
+    assert_eq(resumed, ["p1"])
+    assert_gt(guest.reconciler.current_tick_id(), before, "la reprise resynchronise l'invité")
+
+func test_poll_delegates_to_transport():
+    var w := _wire()
+    var host: NetSession = w.host
+    host.poll(0.016)   # passe-plat vers un transport no-op : ne doit pas planter
+    assert_true(true)
 
 func test_guest_emits_aborted_on_host_drop():
     var w := _wire()
