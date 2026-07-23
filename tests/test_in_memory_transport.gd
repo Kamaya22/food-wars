@@ -40,3 +40,22 @@ func test_announce_connected_fires_for_each_peer():
     host.peer_connected.connect(func(pid): seen.append(pid))
     host.announce_connected()
     assert_eq(seen, ["p1"])
+
+func test_poll_is_noop():
+    var pair := InMemoryTransport.pair("p0", "p1")
+    var host: InMemoryTransport = pair[0]
+    host.message_received.connect(_on_message)
+    host.poll(0.016)   # ne doit rien émettre ni planter
+    assert_eq(_rx.size(), 0)
+
+func test_emit_suspended_and_resumed():
+    var pair := InMemoryTransport.pair("p0", "p1")
+    var host: InMemoryTransport = pair[0]
+    var suspended: Array = []
+    var resumed: Array = []
+    host.peer_suspended.connect(func(pid): suspended.append(pid))
+    host.peer_resumed.connect(func(pid): resumed.append(pid))
+    host.emit_suspended("p1")
+    host.emit_resumed("p1")
+    assert_eq(suspended, ["p1"])
+    assert_eq(resumed, ["p1"])

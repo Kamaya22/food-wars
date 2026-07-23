@@ -30,3 +30,10 @@ func drop() -> void:
         other.peer_disconnected.emit(local_id)
         other._peers.erase(local_id)
     _peers.clear()
+
+# Helpers de test : simulent une suspension/reprise de pair (fenêtre de reconnexion).
+func emit_suspended(peer_id: String) -> void:
+    peer_suspended.emit(peer_id)
+
+func emit_resumed(peer_id: String) -> void:
+    peer_resumed.emit(peer_id)
