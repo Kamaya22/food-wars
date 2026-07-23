@@ -40,3 +40,15 @@ static func read_snapshot(msg: Dictionary) -> Dictionary:
 
 static func read_events(msg: Dictionary) -> Array:
     return msg.get("events", [])
+
+static func serialize(msg: Dictionary) -> String:
+    return JSON.stringify(msg)
+
+static func deserialize(text: String) -> Dictionary:
+    var json = JSON.new()
+    var error = json.parse(text)
+    if error != OK:
+        return {}
+    if typeof(json.data) != TYPE_DICTIONARY:
+        return {}
+    return json.data
