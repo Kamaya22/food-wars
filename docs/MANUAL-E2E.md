@@ -5,7 +5,7 @@ relais Node). À exécuter après tout changement de `relay/` ou
 `net/websocket_transport.gd`.
 
 ## Pré-requis
-- Node ≥ 18, Godot 4.5 (`godot`).
+- Node ≥ 18, Godot 4.5 (binaire `godot` sur le PATH).
 - Une fois : `cd relay && npm install`.
 
 ## 1. Démarrer le relais

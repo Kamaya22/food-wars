@@ -61,7 +61,7 @@
 GUT n'est pas versionné dans le dépôt (dossier `addons/`). L'installer une fois localement :
 
 ```bash
-cd "<repo-root>"
+cd <racine-du-dépôt>
 git clone --depth 1 https://github.com/bitwes/Gut.git /tmp/gut
 mkdir -p addons
 cp -r /tmp/gut/addons/gut addons/gut
