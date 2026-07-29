@@ -55,11 +55,18 @@ class Relay {
         const room = this.rooms.get(code);
         if (!room) return this._send(conn, { t: 'error', reason: 'unknown_code' });
         if (room.guest) return this._send(conn, { t: 'error', reason: 'room_full' });
+        // Nouvel invité OU reprise d'un invité déconnecté (room.guest === null).
+        const isRejoin = room.timer !== null;
+        if (isRejoin) { this.clearTimer(room.timer); room.timer = null; }
         room.guest = conn;
         conn._room = room;
         conn._role = 'guest';
-        this._send(room.host, { t: 'room_ready', role: 'host', seed: room.seed, opponent_id: 'guest' });
         this._send(conn, { t: 'room_ready', role: 'guest', seed: room.seed, opponent_id: 'host' });
+        if (isRejoin) {
+            if (room.host) this._send(room.host, { t: 'peer_rejoined' });
+        } else {
+            this._send(room.host, { t: 'room_ready', role: 'host', seed: room.seed, opponent_id: 'guest' });
+        }
     }
 
     _forward(conn, text) {
@@ -74,7 +81,23 @@ class Relay {
     }
 
     onClose(conn) {
-        // Reconnexion : implémentée en Task 5.
+        const room = conn._room;
+        if (!room) return;
+        if (conn._role === 'host') {
+            // Déconnexion hôte = terminale.
+            if (room.timer) { this.clearTimer(room.timer); room.timer = null; }
+            if (room.guest) this._send(room.guest, { t: 'host_left' });
+            this.rooms.delete(room.code);
+            return;
+        }
+        // Déconnexion invité : fenêtre de reconnexion.
+        room.guest = null;
+        if (room.host) this._send(room.host, { t: 'peer_left' });
+        room.timer = this.setTimer(() => {
+            room.timer = null;
+            if (room.host) this._send(room.host, { t: 'room_closed' });
+            this.rooms.delete(room.code);
+        }, this.reconnectMs);
     }
 }
 

@@ -18,6 +18,29 @@ function newRelay() {
     return new Relay({ makeSeed: () => 4242, makeCode: () => 'WOK' + (n++) });
 }
 
+function fakeTimers() {
+    const pending = [];
+    return {
+        setTimer: (cb, _ms) => { const h = { cb }; pending.push(h); return h; },
+        clearTimer: (h) => { const i = pending.indexOf(h); if (i >= 0) pending.splice(i, 1); },
+        fireAll() { const cbs = pending.splice(0); cbs.forEach((h) => h.cb()); },
+        count() { return pending.length; },
+    };
+}
+
+function pairedRelay(timers) {
+    let n = 0;
+    const r = new Relay({
+        makeSeed: () => 4242, makeCode: () => 'WOK' + (n++),
+        setTimer: timers.setTimer, clearTimer: timers.clearTimer, reconnectMs: 30000,
+    });
+    const host = fakeConn(), guest = fakeConn();
+    r.onConnect(host); r.onMessage(host, JSON.stringify({ t: 'create' }));
+    const code = host.last().code;
+    r.onConnect(guest); r.onMessage(guest, JSON.stringify({ t: 'join', code }));
+    return { r, host, guest, code };
+}
+
 test('create renvoie un code et désigne l\'hôte', () => {
     const r = newRelay();
     const host = fakeConn();
@@ -77,4 +100,40 @@ test('les messages de jeu (kind) sont transférés au pair, verbatim', () => {
     const snap = JSON.stringify({ kind: 'snapshot', view: {}, tick_id: 1, ack_seq: 1 });
     r.onMessage(host, snap);               // hôte -> invité
     assert.strictEqual(guest.sent[guest.sent.length - 1], snap);
+});
+
+test('déconnexion invité : l\'hôte reçoit peer_left et un minuteur est armé', () => {
+    const timers = fakeTimers();
+    const { r, host } = pairedRelay(timers);
+    r.onClose(host._room.guest);
+    assert.strictEqual(host.last().t, 'peer_left');
+    assert.strictEqual(timers.count(), 1);
+});
+
+test('expiration de la fenêtre : le pair restant reçoit room_closed', () => {
+    const timers = fakeTimers();
+    const { r, host } = pairedRelay(timers);
+    r.onClose(host._room.guest);
+    timers.fireAll();
+    assert.strictEqual(host.last().t, 'room_closed');
+});
+
+test('rejoin dans la fenêtre : hôte peer_rejoined, invité re-room_ready, minuteur annulé', () => {
+    const timers = fakeTimers();
+    const { r, host, code } = pairedRelay(timers);
+    r.onClose(host._room.guest);
+    const back = fakeConn();
+    r.onConnect(back); r.onMessage(back, JSON.stringify({ t: 'join', code }));
+    assert.strictEqual(host.last().t, 'peer_rejoined');
+    assert.strictEqual(back.last().t, 'room_ready');
+    assert.strictEqual(back.last().role, 'guest');
+    assert.strictEqual(timers.count(), 0, 'le minuteur de reconnexion est annulé');
+});
+
+test('déconnexion hôte : l\'invité reçoit host_left et la room disparaît', () => {
+    const timers = fakeTimers();
+    const { r, host, guest, code } = pairedRelay(timers);
+    r.onClose(host);
+    assert.strictEqual(guest.last().t, 'host_left');
+    assert.strictEqual(r.rooms.has(code), false);
 });
