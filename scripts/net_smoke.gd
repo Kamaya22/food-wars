@@ -4,6 +4,8 @@ extends SceneTree
 #   Hôte   : godot --headless -s scripts/net_smoke.gd -- host ws://localhost:8080
 #   Invité : godot --headless -s scripts/net_smoke.gd -- join ws://localhost:8080 <CODE>
 
+const SMOKE_TICK_SEC := 1.0   # secondes de jeu avancées par frame (temps accéléré)
+
 var _db: ContentDB
 var _transport: WebSocketTransport
 var _session: NetSession
@@ -52,14 +54,18 @@ func _process(delta: float) -> bool:
         _guest_step()
     return false
 
-func _host_step(delta: float) -> void:
+func _host_step(_delta: float) -> void:
     if not _did_plan:
         _did_plan = true
         _session.host_apply_local({"type": Intents.ADD_INGREDIENT, "ingredient_id": "boeuf"})
         _session.host_apply_local({"type": Intents.ADD_ACTION, "action_id": "cuire"})
         _session.host_apply_local({"type": Intents.SET_READY, "ready": true})
-    if _session.host_state().phase == GameState.Phase.EXECUTION:
-        _session.host_tick(delta)
+    # Temps accéléré : le match dure ~390 s in-game (execution 330 + judgment 60).
+    # Tickr au delta réel prendrait 6,5 min ; on avance d'une seconde de jeu par frame,
+    # comme le test d'intégration. Le tick couvre TOUTES les phases (dont JUDGMENT),
+    # sinon la partie reste bloquée à la fin de l'exécution.
+    if _session.host_state().phase != GameState.Phase.FINISHED:
+        _session.host_tick(SMOKE_TICK_SEC)
     if _session.host_state().phase == GameState.Phase.FINISHED:
         print("[host] MATCH TERMINÉ — résultat: ", _session.host_state().result)
         quit(0)
