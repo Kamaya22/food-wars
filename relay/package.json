@@ -1,0 +1,14 @@
+{
+  "name": "food-wars-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Relais WebSocket de matchmaking pour Food Wars (aucune logique de jeu).",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
